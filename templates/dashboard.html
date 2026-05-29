@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <p class="eyebrow">Analytics overview</p>
+            <h1>Canteen Dashboard</h1>
+            <p class="subtext">Students, menu, transactions, weekly performance, and item sales</p>
+        </div>
+        <a href="{% url 'home' %}" class="dashboard-home-btn">← Back to Home</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Students</h3>
+            <p>{{ total_students }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Active Students</h3>
+            <p>{{ total_active_students }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Menu Items</h3>
+            <p>{{ total_menu_items }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Top Up</h3>
+            <p>₱{{ total_topup }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Sales</h3>
+            <p>₱{{ total_sales }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="panel full-width">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Weekly performance</p>
+                    <h2>Top up vs sales</h2>
+                </div>
+                <span class="mini-badge neutral-badge">Last 7 days</span>
+            </div>
+
+            <div class="chart-card">
+                <canvas id="weeklyPerformanceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel" id="menu">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Student records</p>
+                    <h2>Students</h2>
+                </div>
+            </div>
+
+            <input type="text" id="studentSearch" class="search-box dashboard-search" placeholder="Search students...">
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>RFID UID</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        {% for student in students %}
+                        <tr class="student-row"
+                            data-search="{{ student.student_id|lower }} {{ student.full_name|lower }} {{ student.rfid_uid|lower }}">
+                            <td>{{ student.student_id }}</td>
+                            <td>{{ student.full_name }}</td>
+                            <td>{{ student.rfid_uid }}</td>
+                            <td>₱{{ student.balance }}</td>
+                            <td>
+                                {% if student.active %}
+                                    <span class="mini-badge status-up">Active</span>
+                                {% else %}
+                                    <span class="mini-badge neutral-badge">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5">No students found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Menu management</p>
+                    <h2>Menu Items</h2>
+                </div>
+            </div>
+
+            <input type="text" id="menuSearch" class="search-box dashboard-search" placeholder="Search menu items...">
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Food</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menuTableBody">
+                        {% for item in menu_items %}
+                        <tr class="menu-row"
+                            data-search="{{ item.name|lower }} {% if item.available %}available{% else %}unavailable{% endif %}">
+                            <td>{{ item.name }}</td>
+                            <td>₱{{ item.price }}</td>
+                            <td>
+                                {% if item.available %}
+                                    <span class="mini-badge status-up">Available</span>
+                                {% else %}
+                                    <span class="mini-badge neutral-badge">Unavailable</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3">No menu items found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel full-width" id="transactions">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Best selling items</p>
+                    <h2>Food performance</h2>
+                </div>
+                <span class="mini-badge neutral-badge">Top 5</span>
+            </div>
+
+            <div class="food-performance-grid">
+                {% for item in top_selling_items %}
+                <div class="food-performance-card">
+                    <strong>{{ item.name }}</strong>
+                    <p>{{ item.count }} sold • ₱{{ item.total }}</p>
+                </div>
+                {% empty %}
+                <div class="empty-state">No food sales yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel full-width">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Transaction history</p>
+                    <h2>Transactions / Logs</h2>
+                </div>
+            </div>
+
+            <input type="text" id="transactionSearch" class="search-box dashboard-search" placeholder="Search transactions...">
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Student</th>
+                            <th>Type</th>
+                            <th>Item</th>
+                            <th>Amount</th>
+                            <th>Before</th>
+                            <th>After</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        {% for txn in transactions %}
+                        <tr class="transaction-row"
+                            data-search="{{ txn.created_at|date:'M d, Y h:i A'|lower }} {{ txn.student.full_name|lower }} {{ txn.transaction_type|lower }} {% if txn.menu_item %}{{ txn.menu_item.name|lower }}{% endif %} {{ txn.amount }} {{ txn.balance_before }} {{ txn.balance_after }}">
+                            <td>{{ txn.created_at|date:"M d, Y h:i A" }}</td>
+                            <td>{{ txn.student.full_name }}</td>
+                            <td>{{ txn.transaction_type }}</td>
+                            <td>{% if txn.menu_item %}{{ txn.menu_item.name }}{% else %}-{% endif %}</td>
+                            <td>₱{{ txn.amount }}</td>
+                            <td>₱{{ txn.balance_before }}</td>
+                            <td>₱{{ txn.balance_after }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7">No transactions yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const weeklyLabels = {{ weekly_labels|safe }};
+const weeklyTopupValues = {{ weekly_topup_values|safe }};
+const weeklySalesValues = {{ weekly_sales_values|safe }};
+
+const ctx = document.getElementById('weeklyPerformanceChart');
+if (ctx) {
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: weeklyLabels,
+            datasets: [
+                {
+                    label: 'Top Up',
+                    data: weeklyTopupValues,
+                    backgroundColor: 'rgba(57, 217, 138, 0.75)',
+                    borderColor: 'rgba(57, 217, 138, 1)',
+                    borderWidth: 1,
+                    borderRadius: 8
+                },
+                {
+                    label: 'Sales',
+                    data: weeklySalesValues,
+                    backgroundColor: 'rgba(88, 169, 255, 0.75)',
+                    borderColor: 'rgba(88, 169, 255, 1)',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eef4ff',
+                        font: {
+                            size: 13,
+                            weight: '600'
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#d7e6ff'
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,0.06)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#d7e6ff',
+                        callback: function(value) {
+                            return '₱' + value;
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,0.06)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function attachSearch(inputId, rowSelector) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    input.addEventListener("input", function () {
+        const value = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll(rowSelector);
+
+        rows.forEach(row => {
+            const text = row.dataset.search || "";
+            row.style.display = text.includes(value) ? "" : "none";
+        });
+    });
+}
+
+attachSearch("studentSearch", ".student-row");
+attachSearch("menuSearch", ".menu-row");
+attachSearch("transactionSearch", ".transaction-row");
+</script>
+{% endblock %}

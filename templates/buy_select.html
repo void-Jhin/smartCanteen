@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Buy Food{% endblock %}
+
+{% block content %}
+<div class="checkout-app">
+    <aside class="checkout-sidebar">
+        <div class="checkout-brand">
+            <div class="checkout-logo">SC</div>
+            <div>
+                <strong>Smart Canteen</strong>
+                <span>Student Kiosk</span>
+            </div>
+        </div>
+
+        <nav class="checkout-nav">
+            <a href="{% url 'home' %}"><span>Home</span></a>
+            <a href="{% url 'topup_scan' %}"><span>Top Up</span></a>
+            <a href="{% url 'buy_select' %}" class="active"><span>Buy Food</span></a>
+            <a href="{% url 'product_list' %}"><span>Products</span></a>
+            <a href="{% url 'dashboard' %}"><span>Dashboard</span></a>
+            <a href="{% url 'dashboard' %}#transactions"><span>Transactions</span></a>
+            <a href="{% url 'dashboard' %}#menu"><span>Menu Items</span></a>
+            <a href="{% url 'dashboard' %}"><span>Profile</span></a>
+        </nav>
+
+        <div class="checkout-sidebar-bottom">
+            <span>Help & Support</span>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </aside>
+
+    <main class="checkout-main">
+        <div class="purchase-shell">
+            <div class="purchase-topbar">
+                <a href="{% url 'home' %}" class="home-pill-btn">
+                    <span class="home-pill-icon">&larr;</span>
+                    <span>Back</span>
+                </a>
+                <div>
+                    <p class="eyebrow">Student checkout</p>
+                    <h1>Buy Food</h1>
+                </div>
+                {% if student %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_student">
+                    <button type="submit" class="purchase-link-btn">Scan another student</button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if not student %}
+            <section class="purchase-auth-card">
+                <div class="auth-copy">
+                    <span class="premium-badge">RFID checkout</span>
+                    <h2>Scan student card</h2>
+                    <p>
+                        After the RFID is detected, type the student's password to open their
+                        profile, balance, and available canteen products.
+                    </p>
+                </div>
+
+                <form method="post" class="form-box auth-form" id="student-auth-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="verify_student">
+
+                    <label for="rfid_uid">Student RFID UID</label>
+                    <input
+                        type="text"
+                        name="rfid_uid"
+                        id="rfid_uid"
+                        class="input scan-input"
+                        placeholder="Waiting for student scan..."
+                        autocomplete="off"
+                        autofocus
+                        required
+                    >
+
+                    <div class="scan-status" id="scan-status">Waiting for student scan...</div>
+
+                    <label for="student_pin">Student Password</label>
+                    <input
+                        type="password"
+                        name="student_pin"
+                        id="student_pin"
+                        class="input"
+                        placeholder="Enter student password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button type="submit" class="action-btn blue">Open student profile</button>
+                </form>
+            </section>
+            {% else %}
+            <div class="purchase-grid">
+                <section class="product-panel">
+                    <div class="product-panel-header">
+                        <div>
+                            <p class="eyebrow">Canteen products</p>
+                            <h2>Food Menu</h2>
+                        </div>
+                        <div class="search-wrap">
+                            <span>Search</span>
+                            <input type="search" id="menuSearch" placeholder="Search food...">
+                        </div>
+                    </div>
+
+                    <div class="product-grid" id="productGrid">
+                        {% for item in available_items %}
+                        <form method="post" class="product-card" data-search="{{ item.name|lower }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="add_item">
+                            <input type="hidden" name="menu_item_id" value="{{ item.id }}">
+
+                            <div class="product-art">
+                                <span>{{ item.name|slice:":1" }}</span>
+                            </div>
+                            <div>
+                                <strong>{{ item.name }}</strong>
+                                <p>Fresh canteen item</p>
+                            </div>
+                            <div class="product-bottom">
+                                <span>₱{{ item.price }}</span>
+                                <button type="submit">Add</button>
+                            </div>
+                        </form>
+                        {% empty %}
+                        <div class="empty-state">No available food items.</div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <aside class="student-profile-card">
+                    <div class="profile-topline">
+                        <div class="profile-avatar">{{ student.full_name|slice:":1" }}</div>
+                        <div>
+                            <p class="eyebrow">Student profile</p>
+                            <h2>{{ student.full_name }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="balance-card">
+                        <span>Current Balance</span>
+                        <strong>₱{{ student.balance }}</strong>
+                    </div>
+
+                    <div class="profile-stack">
+                        <div class="profile-line"><span>Student ID</span><strong>{{ student.student_id }}</strong></div>
+                        <div class="profile-line"><span>RFID UID</span><strong>{{ student.rfid_uid }}</strong></div>
+                        <div class="profile-line"><span>Status</span><strong>{% if student.active %}Active{% else %}Inactive{% endif %}</strong></div>
+                    </div>
+
+                    <div class="checkout-summary">
+                        <div class="summary-head">
+                            <div>
+                                <p class="eyebrow">Checkout</p>
+                                <h3>Order Summary</h3>
+                            </div>
+                            {% if cart_items %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="clear_cart">
+                                <button type="submit" class="summary-clear">Clear</button>
+                            </form>
+                            {% endif %}
+                        </div>
+
+                        <div class="summary-items">
+                            {% for cart_item in cart_items %}
+                            <div class="summary-item">
+                                <div>
+                                    <strong>{{ cart_item.item.name }}</strong>
+                                    <span>₱{{ cart_item.item.price }} x {{ cart_item.quantity }}</span>
+                                </div>
+                                <div class="summary-item-actions">
+                                    <b>₱{{ cart_item.line_total }}</b>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="remove_item">
+                                        <input type="hidden" name="menu_item_id" value="{{ cart_item.item.id }}">
+                                        <button type="submit">-</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="summary-empty">Select a product on the left. Items will appear here before payment.</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="summary-totals">
+                            <div><span>Total</span><strong>₱{{ cart_total }}</strong></div>
+                            <div><span>Balance after payment</span><strong>₱{{ projected_balance }}</strong></div>
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="confirm_purchase">
+                            <button type="submit" class="confirm-payment-btn" {% if not cart_items %}disabled{% endif %}>
+                                Confirm Payment
+                            </button>
+                        </form>
+                    </div>
+                </aside>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const scanInput = document.getElementById("rfid_uid");
+const scanStatus = document.getElementById("scan-status");
+let detectedUID = "";
+
+async function pollRFID() {
+    if (!scanInput || detectedUID) return;
+
+    try {
+        const response = await fetch("{% url 'latest_scan_api' %}");
+        const data = await response.json();
+
+        if (data.uid) {
+            detectedUID = data.uid;
+            scanInput.value = data.uid;
+            scanInput.readOnly = true;
+            scanStatus.textContent = "Card detected: " + data.uid;
+            scanStatus.classList.add("detected");
+            document.getElementById("student_pin")?.focus();
+        }
+    } catch (error) {
+        console.log("RFID polling error:", error);
+    }
+}
+
+setInterval(pollRFID, 1000);
+
+const menuSearch = document.getElementById("menuSearch");
+if (menuSearch) {
+    menuSearch.addEventListener("input", () => {
+        const value = menuSearch.value.trim().toLowerCase();
+        document.querySelectorAll(".product-card").forEach(card => {
+            card.style.display = card.dataset.search.includes(value) ? "grid" : "none";
+        });
+    });
+}
+</script>
+{% endblock %}

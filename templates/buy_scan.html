@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Buy Food Scan{% endblock %}
+
+{% block content %}
+<div class="process-shell">
+    <div class="process-topbar">
+        <a href="{% url 'home' %}" class="ghost-link">← Home</a>
+        <div class="step-indicator">
+            <span class="step-badge">1. Select Food</span>
+            <span class="step-badge is-active">2. Scan and Confirm</span>
+        </div>
+    </div>
+
+    <div class="process-grid">
+        <section class="glass-panel process-card slim-info-card">
+            <div class="section-title-row">
+                <div>
+                    <p class="eyebrow">Selected item</p>
+                    <h2>{{ menu_item.name }}</h2>
+                </div>
+                <span class="mini-badge neutral-badge">Pending payment</span>
+            </div>
+
+            <div class="price-highlight">
+                <span>Amount to deduct</span>
+                <strong>₱{{ menu_item.price }}</strong>
+            </div>
+
+            <div class="support-note primary-note">
+                Scan the student's RFID card, then enter the admin verification PIN to finalize the purchase.
+            </div>
+        </section>
+
+        <section class="glass-panel process-card">
+            <div class="section-title-row">
+                <div>
+                    <p class="eyebrow">Payment confirmation</p>
+                    <h2>Scan card and verify</h2>
+                </div>
+                <span class="status-pill">Waiting</span>
+            </div>
+
+            <form method="post" class="form-box" id="buy-form">
+                {% csrf_token %}
+
+                <label for="rfid_uid">RFID UID</label>
+                <input
+                    type="text"
+                    name="rfid_uid"
+                    id="rfid_uid"
+                    class="input scan-input"
+                    placeholder="Waiting for RFID scan..."
+                    autocomplete="off"
+                    autofocus
+                    required
+                >
+
+                <div class="scan-panel">
+                    <div class="scan-status" id="scan-status">Waiting for card scan...</div>
+                    <div class="scan-tip-box">Once the card is detected, enter the admin verification PIN below.</div>
+                </div>
+
+                <label>{{ password_form.admin_password.label }}</label>
+                {{ password_form.admin_password }}
+
+                <button type="submit" class="action-btn blue">Confirm purchase</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let pollingStopped = false;
+let detectedUID = "";
+
+async function pollRFID() {
+    if (pollingStopped) return;
+
+    try {
+        const response = await fetch("{% url 'latest_scan_api' %}");
+        const data = await response.json();
+
+        if (data.uid && !detectedUID) {
+            detectedUID = data.uid;
+            pollingStopped = true;
+
+            const input = document.getElementById("rfid_uid");
+            const status = document.getElementById("scan-status");
+
+            input.value = data.uid;
+            input.readOnly = true;
+
+            status.textContent = "Card detected: " + data.uid;
+            status.classList.add("detected");
+        }
+    } catch (error) {
+        console.log("RFID polling error:", error);
+    }
+}
+
+setInterval(pollRFID, 1000);
+</script>
+{% endblock %}

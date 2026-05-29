@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Student Login{% endblock %}
+
+{% block content %}
+<main class="login-page">
+    <div class="login-shell">
+        <section class="login-card">
+            <div class="login-heading">
+                <div class="school-mark">SC</div>
+                <p><strong>Student</strong> Canteen Portal</p>
+                <h1>Student Login</h1>
+                <span>View your balance and transaction history</span>
+            </div>
+
+            <form method="post" class="form-box login-form">
+                {% csrf_token %}
+
+                {{ form.student_id.label_tag }}
+                {{ form.student_id }}
+
+                {{ form.student_pin.label_tag }}
+                {{ form.student_pin }}
+
+                <button type="submit" class="action-btn blue">
+                    <span class="signin-arrow">&rarr;</span>
+                    <span>Sign In</span>
+                </button>
+            </form>
+
+            <p class="login-note"><a href="{% url 'login' %}">Staff login</a></p>
+        </section>
+
+        <section class="login-visual" aria-label="Student account overview">
+            <div class="visual-scene">
+                <div class="visual-dots-grid"></div>
+                <div class="visual-id">
+                    <span></span>
+                    <strong>ID</strong>
+                    <small>Student Card</small>
+                </div>
+                <div class="visual-sales">
+                    <span>Current Balance</span>
+                    <strong>PHP 0.00</strong>
+                    <small>Live account</small>
+                </div>
+                <div class="visual-tray">
+                    <span class="plate"></span>
+                    <span class="cup"></span>
+                </div>
+            </div>
+
+            <h2>Your Canteen Account</h2>
+            <p>Check your remaining balance and review purchases or top-ups anytime.</p>
+        </section>
+    </div>
+</main>
+{% endblock %}

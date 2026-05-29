@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Staff Login{% endblock %}
+
+{% block content %}
+<main class="login-page">
+    <div class="login-shell">
+        <section class="login-card">
+            <div class="login-heading">
+                <div class="school-mark">SC</div>
+                <p><strong>School</strong> Canteen Portal</p>
+                <h1>Welcome Back</h1>
+                <span>Sign in to continue to your account</span>
+            </div>
+
+            <form method="post" class="form-box login-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    class="input login-icon-user"
+                    placeholder="admin or staff"
+                    autocomplete="username"
+                    autofocus
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    class="input login-icon-lock"
+                    placeholder="Enter password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <div class="login-options">
+                    <label class="remember-line">
+                        <input type="checkbox" name="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="{% url 'student_login' %}">Student login</a>
+                </div>
+
+                <button type="submit" class="action-btn blue">
+                    <span class="signin-arrow">&rarr;</span>
+                    <span>Sign In</span>
+                </button>
+            </form>
+
+            <p class="login-note">Use this page for administrator and staff accounts.</p>
+        </section>
+
+        <section class="login-visual" aria-label="Smart canteen overview">
+            <div class="visual-scene">
+                <div class="visual-dots-grid"></div>
+                <div class="visual-id">
+                    <span></span>
+                    <strong>SC</strong>
+                    <small>RFID Scan</small>
+                </div>
+                <div class="visual-chart">
+                    <div class="chart-top">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="chart-bars">
+                        <i></i>
+                        <i></i>
+                        <i></i>
+                    </div>
+                </div>
+                <div class="visual-sales">
+                    <span>Today's Sales</span>
+                    <strong>₱1,250.00</strong>
+                    <small>+12.5%</small>
+                </div>
+                <div class="visual-tray">
+                    <span class="plate"></span>
+                    <span class="cup"></span>
+                </div>
+            </div>
+
+            <h2>School Canteen System</h2>
+            <p>Manage RFID top ups, food purchases, and daily canteen reports.</p>
+
+            <div class="feature-list">
+                <div class="feature-row blue-feature">
+                    <span></span>
+                    <div>
+                        <strong>RFID Management</strong>
+                        <small>Easy student card top-ups and balance tracking</small>
+                    </div>
+                </div>
+                <div class="feature-row pink-feature">
+                    <span></span>
+                    <div>
+                        <strong>Sales Analytics</strong>
+                        <small>Real-time reports and detailed analytics</small>
+                    </div>
+                </div>
+                <div class="feature-row green-feature">
+                    <span></span>
+                    <div>
+                        <strong>Secure & Reliable</strong>
+                        <small>Your data is safe with protected access</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-dots">
+                <span class="active"></span>
+                <span></span>
+                <span></span>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

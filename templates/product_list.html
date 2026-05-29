@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Products{% endblock %}
+
+{% block content %}
+<div class="admin-app">
+    <aside class="admin-sidebar">
+        <div class="side-brand">
+            <div class="side-logo">SC</div>
+            <div>
+                <strong>Smart Canteen</strong>
+                <span>Product Setup</span>
+            </div>
+        </div>
+
+        <nav class="side-nav">
+            <a href="{% url 'home' %}"><span>H</span>Home</a>
+            <a href="{% url 'topup_scan' %}"><span>T</span>Top Up</a>
+            <a href="{% url 'buy_select' %}"><span>B</span>Buy Food</a>
+            <a href="{% url 'product_list' %}" class="active"><span>P</span>Products</a>
+            <a href="{% url 'dashboard' %}"><span>D</span>Dashboard</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <section class="admin-content-panel product-admin-panel">
+            <div class="panel-title-row">
+                <div>
+                    <p class="eyebrow">Administrator mode</p>
+                    <h2>Food / Products</h2>
+                </div>
+                <a href="{% url 'home' %}">Back Home</a>
+            </div>
+
+            <div class="product-admin-grid">
+                <section class="home-panel">
+                    <h2>Add Product</h2>
+                    <form method="post" class="form-box product-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add">
+
+                        {{ form.name.label_tag }}
+                        {{ form.name }}
+                        {{ form.price.label_tag }}
+                        {{ form.price }}
+
+                        <label class="checkbox-line">
+                            {{ form.available }}
+                            <span>Available for checkout</span>
+                        </label>
+
+                        <button type="submit" class="action-btn green">Add Product</button>
+                    </form>
+                </section>
+
+                <section class="home-panel product-table-panel">
+                    <div class="panel-title-row">
+                        <h2>Current Products</h2>
+                        <span>{{ items|length }} items</span>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>PHP {{ item.price }}</td>
+                                    <td>
+                                        {% if item.available %}
+                                            <span class="mini-badge status-up">Available</span>
+                                        {% else %}
+                                            <span class="mini-badge neutral-badge">Unavailable</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="table-actions">
+                                        <a href="{% url 'product_edit' item.id %}">Edit</a>
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="toggle">
+                                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                                            <button type="submit">{% if item.available %}Disable{% else %}Enable{% endif %}</button>
+                                        </form>
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                                            <button type="submit" class="danger-link">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4">No products yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}

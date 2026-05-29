@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Top Up Scan{% endblock %}
+
+{% block content %}
+<div class="checkout-app">
+    <aside class="checkout-sidebar">
+        <div class="checkout-brand">
+            <div class="checkout-logo">SC</div>
+            <div>
+                <strong>Smart Canteen</strong>
+                <span>Admin Kiosk</span>
+            </div>
+        </div>
+
+        <nav class="checkout-nav">
+            <a href="{% url 'home' %}"><span>Home</span></a>
+            <a href="{% url 'topup_scan' %}" class="active"><span>Top Up</span></a>
+            <a href="{% url 'buy_select' %}"><span>Buy Food</span></a>
+            <a href="{% url 'product_list' %}"><span>Products</span></a>
+            <a href="{% url 'dashboard' %}"><span>Dashboard</span></a>
+            <a href="{% url 'dashboard' %}#transactions"><span>Transactions</span></a>
+            <a href="{% url 'dashboard' %}#menu"><span>Menu Items</span></a>
+        </nav>
+
+        <div class="checkout-sidebar-bottom">
+            <span>Help & Support</span>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </aside>
+
+    <main class="checkout-main">
+        <section class="topup-wait-card">
+            <div class="topup-head">
+                <a href="{% url 'home' %}" class="home-pill-btn">
+                    <span class="home-pill-icon">&larr;</span>
+                    <span>Back to Home</span>
+                </a>
+                <span class="status-pill" id="scan-pill">Waiting</span>
+            </div>
+
+            <p class="eyebrow">Top up workflow</p>
+            <h1>Waiting for student scan</h1>
+            <p class="topup-copy">
+                Ask the student to tap their RFID card on the scanner. When the card is detected,
+                the system will open the admin access page for the top-up amount and PIN.
+            </p>
+
+            <form method="post" class="topup-scan-form" id="scan-form">
+                {% csrf_token %}
+
+                <label for="rfid_uid">Student RFID UID</label>
+                <input
+                    type="text"
+                    name="rfid_uid"
+                    id="rfid_uid"
+                    class="input scan-input topup-scan-input"
+                    placeholder="Waiting for student scan..."
+                    autocomplete="off"
+                    autofocus
+                    required
+                >
+
+                <div class="topup-info-card">
+                    <div class="pulse-dot"></div>
+                    <div>
+                        <strong id="scan-status">Waiting for student scan...</strong>
+                        <span>Place the student's RFID card on the scanner.</span>
+                    </div>
+                </div>
+
+                <div class="topup-info-card">
+                    <div class="info-icon">i</div>
+                    <div>
+                        <strong>Manual RFID entry is still available for testing or backup.</strong>
+                        <span>You can enter the RFID UID manually if needed.</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="action-btn green topup-submit-btn">
+                    Continue to admin access
+                </button>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let lastUID = "";
+
+async function pollRFID() {
+    try {
+        const response = await fetch("{% url 'latest_scan_api' %}");
+        const data = await response.json();
+
+        if (data.uid && data.uid !== lastUID) {
+            lastUID = data.uid;
+
+            const input = document.getElementById("rfid_uid");
+            const status = document.getElementById("scan-status");
+            const pill = document.getElementById("scan-pill");
+
+            input.value = data.uid;
+            status.textContent = "Card detected: " + data.uid;
+            pill.textContent = "Card detected";
+            pill.classList.add("detected");
+
+            setTimeout(() => {
+                document.getElementById("scan-form")?.submit();
+            }, 500);
+        }
+    } catch (error) {
+        console.log("RFID polling error:", error);
+    }
+}
+
+setInterval(pollRFID, 1000);
+</script>
+{% endblock %}

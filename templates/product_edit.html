@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Edit Product{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <p class="eyebrow">Product setup</p>
+            <h1>Edit Product</h1>
+            <p class="subtext">{{ item.name }}</p>
+        </div>
+        <a href="{% url 'product_list' %}" class="dashboard-home-btn">Back to Products</a>
+    </div>
+
+    <div class="panel full-width edit-product-panel">
+        <form method="post" class="form-box product-form">
+            {% csrf_token %}
+
+            {{ form.name.label_tag }}
+            {{ form.name }}
+            {{ form.price.label_tag }}
+            {{ form.price }}
+
+            <label class="checkbox-line">
+                {{ form.available }}
+                <span>Available for checkout</span>
+            </label>
+
+            <button type="submit" class="action-btn blue">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

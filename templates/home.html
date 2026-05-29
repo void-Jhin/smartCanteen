@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Home{% endblock %}
+
+{% block content %}
+<div class="admin-app">
+    <aside class="admin-sidebar">
+        <div class="side-brand">
+            <div class="side-logo">SC</div>
+            <div>
+                <strong>Smart Canteen</strong>
+                <span>Active Kiosk</span>
+            </div>
+        </div>
+
+        <nav class="side-nav">
+            <a href="{% url 'home' %}" class="active"><span>⌂</span>Home</a>
+            <a href="{% url 'topup_scan' %}"><span>▣</span>Top Up</a>
+            <a href="{% url 'buy_select' %}"><span>▤</span>Buy Food</a>
+            <a href="{% url 'product_list' %}"><span>P</span>Products</a>
+            <a href="{% url 'dashboard' %}"><span>▦</span>Dashboard</a>
+            <a href="{% url 'dashboard' %}#transactions"><span>▥</span>Transactions</a>
+            <a href="{% url 'dashboard' %}#menu"><span>☷</span>Menu Items</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <section class="admin-hero">
+            <div class="admin-user-pill">
+                <div class="user-dot">{{ request.session.staff_role|slice:":1" }}</div>
+                <div>
+                    <strong>{{ request.session.staff_role|default:"Administrator" }}</strong>
+                    <span>signed in</span>
+                </div>
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+
+            <div class="hero-copy">
+                <p>Good afternoon, Admin!</p>
+                <h1>Smart Canteen</h1>
+                <span>Manage canteen operations with ease and efficiency.</span>
+
+                <div class="hero-meta">
+                    <div class="hero-clock" id="liveClock">12:00 PM</div>
+                    <div>{% now "l, d F Y" %}</div>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="hero-bars"><i></i><i></i><i></i><i></i></div>
+                <div class="hero-line"></div>
+                <div class="hero-ring"></div>
+            </div>
+        </section>
+
+        <section class="admin-content-panel">
+            <h2>Quick Access</h2>
+            <div class="admin-actions">
+                <a href="{% url 'topup_scan' %}" class="admin-action-card green-card">
+                    <span class="action-icon">▣</span>
+                    <strong>Top Up</strong>
+                    <small>Add balance to a student account using RFID.</small>
+                    <b>→</b>
+                </a>
+                <a href="{% url 'buy_select' %}" class="admin-action-card blue-card">
+                    <span class="action-icon">▤</span>
+                    <strong>Buy Food</strong>
+                    <small>Select items, scan a card, and complete payment.</small>
+                    <b>→</b>
+                </a>
+                <a href="{% url 'dashboard' %}" class="admin-action-card purple-card">
+                    <span class="action-icon">▦</span>
+                    <strong>Dashboard</strong>
+                    <small>Check students, menu items, transactions, and totals.</small>
+                    <b>→</b>
+                </a>
+                <a href="{% url 'product_list' %}" class="admin-action-card orange-card">
+                    <span class="action-icon">P</span>
+                    <strong>Products</strong>
+                    <small>Add food items and update product availability.</small>
+                    <b>→</b>
+                </a>
+            </div>
+
+            <h2>Today's Overview</h2>
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <span class="overview-icon green-soft">▣</span>
+                    <div><strong>₱{{ today_topup_total }}</strong><small>Total Top-Ups</small><em>+12% from yesterday</em></div>
+                </div>
+                <div class="overview-card">
+                    <span class="overview-icon blue-soft">▤</span>
+                    <div><strong>₱{{ today_sales_total }}</strong><small>Total Sales</small><em>+15% from yesterday</em></div>
+                </div>
+                <div class="overview-card">
+                    <span class="overview-icon purple-soft">♙</span>
+                    <div><strong>{{ today_transaction_count }}</strong><small>Total Transactions</small><em>+8% from yesterday</em></div>
+                </div>
+                <div class="overview-card">
+                    <span class="overview-icon orange-soft">☷</span>
+                    <div><strong>{{ today_food_count }}</strong><small>Food Items Sold</small><em>+10% from yesterday</em></div>
+                </div>
+            </div>
+
+            <div class="home-lower-grid">
+                <section class="home-panel">
+                    <div class="panel-title-row">
+                        <h2>Recent Transactions</h2>
+                        <a href="{% url 'dashboard' %}">View All</a>
+                    </div>
+                    <div class="recent-list">
+                        {% for txn in recent_transactions %}
+                        <div class="recent-row">
+                            <div>
+                                <strong>{{ txn.student.full_name }}</strong>
+                                <span>{{ txn.get_transaction_type_display }}{% if txn.menu_item %} · {{ txn.menu_item.name }}{% endif %}</span>
+                            </div>
+                            <b>₱{{ txn.amount }}</b>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">No recent transactions.</div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="home-panel">
+                    <div class="panel-title-row">
+                        <h2>Popular Items</h2>
+                        <a href="{% url 'dashboard' %}">View All</a>
+                    </div>
+                    <div class="recent-list">
+                        {% for item in popular_items %}
+                        <div class="recent-row">
+                            <div>
+                                <strong>{{ item.menu_item__name }}</strong>
+                                <span>{{ item.count }} orders</span>
+                            </div>
+                            <b>₱{{ item.total }}</b>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">No popular items yet.</div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateClock() {
+    const now = new Date();
+    const options = { hour: "numeric", minute: "2-digit", hour12: true };
+    const clock = document.getElementById("liveClock");
+    if (clock) clock.textContent = now.toLocaleTimeString([], options);
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Canteen | Confirm Top Up{% endblock %}
+
+{% block content %}
+<div class="process-shell">
+    <div class="process-topbar">
+        <a href="{% url 'home' %}" class="ghost-link">← Home</a>
+        <div class="step-indicator">
+            <span class="step-badge">1. Scan Card</span>
+            <span class="step-badge is-active">2. Admin Access</span>
+        </div>
+    </div>
+
+    <div class="process-grid">
+        <section class="glass-panel process-card slim-info-card">
+            <div class="section-title-row">
+                <div>
+                    <p class="eyebrow">Student profile</p>
+                    <h2>{{ student.full_name }}</h2>
+                </div>
+                <span class="mini-badge neutral-badge">Top up target</span>
+            </div>
+
+            <div class="profile-stack">
+                <div class="profile-line"><span>Student ID</span><strong>{{ student.student_id }}</strong></div>
+                <div class="profile-line"><span>RFID UID</span><strong>{{ student.rfid_uid }}</strong></div>
+                <div class="profile-line"><span>Current balance</span><strong>₱{{ student.balance }}</strong></div>
+            </div>
+
+            <div class="support-note success-note">
+                The student card has been scanned. Enter the amount and the admin-only PIN to complete the top up.
+            </div>
+        </section>
+
+        <section class="glass-panel process-card">
+            <div class="section-title-row">
+                <div>
+                    <p class="eyebrow">Admin access</p>
+                    <h2>Verify top up</h2>
+                </div>
+                <span class="status-pill">Secure</span>
+            </div>
+
+            <form method="post" class="form-box">
+                {% csrf_token %}
+                <label>{{ amount_form.amount.label }}</label>
+                {{ amount_form.amount }}
+
+                <label>{{ password_form.admin_password.label }}</label>
+                {{ password_form.admin_password }}
+
+                <button type="submit" class="action-btn green">Confirm top up</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
