@@ -1,9 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "python manage.py collectstatic --noinput",
-  "functions": {
-    "smart_canteen/wsgi.py": {
-      "excludeFiles": "{venv/**,__pycache__/**,**/*.pyc,latest_scan.json,db.sqlite3}"
-    }
-  }
+  "buildCommand": "python manage.py collectstatic --noinput"
 }
